@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>פארקור הכי מטורף</title>
+<style>
+*{box-sizing:border-box}body{margin:0;overflow:hidden;font-family:Arial,sans-serif;background:linear-gradient(#69d7ff,#e9fbff 55%,#9bea70);user-select:none}#game{position:relative;width:100vw;height:100vh;overflow:hidden}#world{position:absolute;left:0;bottom:0;width:7200px;height:100vh}.cloud{position:absolute;width:170px;height:55px;background:#fff;border-radius:50px;box-shadow:45px 10px 0 #fff,90px -5px 0 #fff;opacity:.8;animation:float 5s infinite ease-in-out}@keyframes float{50%{transform:translateY(-14px)}}.platform{position:absolute;height:35px;border-radius:12px;background:linear-gradient(#37f46a,#168d31);border:4px solid #07601f;box-shadow:0 9px 0 #054417,0 16px 18px #0004}.moving{background:linear-gradient(#fff45c,#ffb000);border-color:#9b6700}.lava{position:absolute;bottom:0;width:7200px;height:70px;background:repeating-linear-gradient(45deg,#ff2500 0 20px,#ffb300 20px 40px);box-shadow:0 -12px 24px #ff330099;animation:lava .4s infinite}@keyframes lava{50%{filter:hue-rotate(40deg)}}.coin{position:absolute;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff,#ffe45c 35%,#ffb700 70%);border:3px solid #b87700;animation:coin .8s infinite alternate}@keyframes coin{to{transform:scaleX(.35) rotate(20deg)}}.flag{position:absolute;width:20px;height:160px;background:#222;border-radius:8px}.flag:after{content:"ניצחת!";position:absolute;top:0;right:18px;width:105px;height:58px;background:linear-gradient(135deg,#ff3bbd,#6b4dff);color:#fff;font-weight:bold;display:grid;place-items:center;border-radius:8px;box-shadow:0 7px 12px #0005}#player{position:absolute;width:56px;height:96px;left:120px;bottom:160px;z-index:5;filter:drop-shadow(0 8px 6px #0006)}.hair{position:absolute;width:54px;height:43px;background:#3b1d12;border-radius:48% 48% 30% 30%;left:1px;top:-4px}.hair:after{content:"";position:absolute;width:18px;height:45px;background:#3b1d12;left:-4px;top:24px;border-radius:20px}.head{position:absolute;width:42px;height:42px;border-radius:50%;background:#ffd1a6;left:7px;top:3px;border:3px solid #5f341f}.eye{position:absolute;width:5px;height:5px;background:#111;border-radius:50%;top:23px}.eye.l{left:18px}.eye.r{right:18px}.body{position:absolute;width:48px;height:45px;background:linear-gradient(#ff5ac8,#9224c8);left:4px;top:42px;border-radius:14px;border:3px solid #5d137d}.arm,.leg{position:absolute;background:#ffd1a6;border:3px solid #5f341f;border-radius:18px}.arm{width:15px;height:42px;top:48px}.arm.a1{left:-6px;transform:rotate(15deg)}.arm.a2{right:-6px;transform:rotate(-15deg)}.leg{width:17px;height:35px;top:80px;background:#5249ff}.leg.l1{left:9px}.leg.l2{right:9px}#hud{position:absolute;top:15px;left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:12px;direction:rtl}.box{background:#ffffffdd;border:3px solid #222;border-radius:14px;padding:9px 14px;font-weight:bold;box-shadow:0 5px 10px #0003}#message{position:absolute;inset:0;display:none;place-items:center;background:#0007;color:white;z-index:30;text-align:center}.panel{background:#111;border:4px solid #fff;border-radius:24px;padding:28px;max-width:460px}button{font-size:22px;border:0;border-radius:14px;padding:12px 22px;background:#ff4cc7;color:white;font-weight:bold;cursor:pointer}.tip{position:absolute;right:15px;bottom:18px;background:#0009;color:white;padding:12px 16px;border-radius:15px;z-index:20;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="world">
+    <div class="cloud" style="left:280px;top:80px"></div><div class="cloud" style="left:1100px;top:120px"></div><div class="cloud" style="left:2100px;top:70px"></div><div class="cloud" style="left:3600px;top:110px"></div><div class="cloud" style="left:5200px;top:85px"></div>
+    <div class="lava"></div>
+    <div id="platforms"></div><div id="coins"></div>
+    <div class="flag" style="left:6900px;bottom:105px"></div>
+  </div>
+  <div id="player"><div class="hair"></div><div class="head"><div class="eye l"></div><div class="eye r"></div></div><div class="body"></div><div class="arm a1"></div><div class="arm a2"></div><div class="leg l1"></div><div class="leg l2"></div></div>
+  <div id="hud"><div class="box">🪙 מטבעות: <span id="score">0</span></div><div class="box">⏱️ זמן: <span id="time">0</span></div><div class="box">❤️ חיים: <span id="lives">3</span></div></div>
+  <div class="tip">חצים / A D = לזוז<br>רווח / W / חץ למעלה = קפיצה<br>אפשר דאבל־ג׳אמפ!</div>
+  <div id="message"><div class="panel"><h1 id="title"></h1><p id="text"></p><button onclick="restart()">שחק שוב</button></div></div>
+</div>
+<script>
+const world=document.getElementById('world'),player=document.getElementById('player'),pWrap=document.getElementById('platforms'),cWrap=document.getElementById('coins');
+const scoreEl=document.getElementById('score'),timeEl=document.getElementById('time'),livesEl=document.getElementById('lives'),msg=document.getElementById('message'),title=document.getElementById('title'),text=document.getElementById('text');
+let keys={},x=120,y=170,vx=0,vy=0,camera=0,score=0,lives=3,jumps=0,won=false,start=Date.now();
+const gravity=.75,speed=.85,maxSpeed=8,jump=17;
+const data=[ [0,90,430,0],[560,170,220,0],[900,280,210,0],[1260,205,260,0],[1660,340,210,1],[2050,260,250,0],[2460,395,180,0],[2820,300,260,1],[3250,190,240,0],[3650,330,180,0],[3980,450,210,0],[4380,300,270,1],[4820,210,230,0],[5220,370,200,0],[5580,500,220,0],[6000,320,260,1],[6480,180,280,0],[6820,90,360,0] ];
+let platforms=[];data.forEach((d,i)=>{let e=document.createElement('div');e.className='platform'+(d[3]?' moving':'');e.style.left=d[0]+'px';e.style.bottom=d[1]+'px';e.style.width=d[2]+'px';pWrap.appendChild(e);platforms.push({el:e,x:d[0],y:d[1],w:d[2],h:35,m:d[3],base:d[1],phase:i});});
+let coins=[];for(let i=1;i<data.length-1;i++){let d=data[i];for(let k=0;k<2;k++){let e=document.createElement('div');e.className='coin';let cx=d[0]+55+k*80,cy=d[1]+65;e.style.left=cx+'px';e.style.bottom=cy+'px';cWrap.appendChild(e);coins.push({el:e,x:cx,y:cy,taken:false});}}
+document.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if([' ','arrowup','w'].includes(e.key.toLowerCase()))jumpNow();});
+document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+function jumpNow(){if(won)return;if(jumps<2){vy=jump;jumps++;}}
+function rects(a,b){return a.x<a.x+a.w&&a.x+a.w>b.x&&a.x<b.x+b.w&&a.y<b.y+b.h&&a.y+a.h>b.y}
+function restart(){x=120;y=170;vx=0;vy=0;camera=0;score=0;lives=3;jumps=0;won=false;start=Date.now();msg.style.display='none';coins.forEach(c=>{c.taken=false;c.el.style.display='block'});updateHud();}
+function die(){lives--;updateHud();if(lives<=0){end('נפסלת!','נגעת בלבה יותר מדי פעמים. נסה שוב ותהיה אלוף פארקור.');}else{x=Math.max(120,x-600);y=260;vx=0;vy=0;jumps=0;}}
+function end(t,tx){won=true;title.textContent=t;text.textContent=tx;msg.style.display='grid';}
+function updateHud(){scoreEl.textContent=score;livesEl.textContent=lives;timeEl.textContent=Math.floor((Date.now()-start)/1000);}
+function loop(){requestAnimationFrame(loop);if(won)return;let now=Date.now()/1000;platforms.forEach(p=>{if(p.m){p.y=p.base+Math.sin(now*2+p.phase)*70;p.el.style.bottom=p.y+'px';}});
+if(keys['arrowright']||keys['d'])vx+=speed;if(keys['arrowleft']||keys['a'])vx-=speed;vx*=.85;if(vx>maxSpeed)vx=maxSpeed;if(vx<-maxSpeed)vx=-maxSpeed;x+=vx;vy-=gravity;y+=vy;
+let pr={x,y,w:56,h:96},landed=false;for(const p of platforms){let r={x:p.x,y:p.y+35,w:p.w,h:p.h};if(pr.x+pr.w>p.x&&pr.x<p.x+p.w&&y<=p.y+35&&y>=p.y+10&&vy<=0){y=p.y+35;vy=0;jumps=0;landed=true;}}
+coins.forEach(c=>{if(!c.taken&&Math.abs((x+28)-(c.x+14))<50&&Math.abs((y+48)-(c.y+14))<60){c.taken=true;c.el.style.display='none';score++;}});
+if(y<72)die();if(x>6860)end('וואו! ניצחת!','אספת '+score+' מטבעות וסיימת את המסלול כמו מלכת פארקור.');
+camera=Math.max(0,Math.min(x-220,6200));world.style.transform='translateX('+-camera+'px)';player.style.left=(x-camera)+'px';player.style.bottom=y+'px';player.style.transform=vx<-.5?'scaleX(-1)':'scaleX(1)';updateHud();}
+updateHud();loop();
+</script>
+</body>
+</html>
