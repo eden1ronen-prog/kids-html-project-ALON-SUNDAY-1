@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>משחק הבובות</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    text-align:center;
+    background:#f5f5f5;
+    margin:20px;
+}
+
+h1{
+    color:#333;
+}
+
+#hint{
+    font-size:24px;
+    font-weight:bold;
+    color:#c62828;
+    margin:20px;
+}
+
+#info{
+    font-size:20px;
+    margin:15px;
+}
+
+#dolls{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:15px;
+    margin-top:20px;
+}
+
+.doll{
+    width:110px;
+    height:170px;
+    border-radius:15px;
+    border:3px solid #333;
+    background:white;
+    cursor:pointer;
+    padding:10px;
+    transition:0.3s;
+}
+
+.doll:hover{
+    transform:scale(1.08);
+}
+
+.face{
+    font-size:55px;
+}
+
+.details{
+    font-size:14px;
+    margin-top:5px;
+}
+</style>
+</head>
+<body>
+
+<h1>🎎 משחק הבובות 🎎</h1>
+
+<div id="hint"></div>
+<div id="info"></div>
+<div id="dolls"></div>
+
+<script>
+
+let stage = 1;
+let score = 0;
+
+const faces = ["🧸","🤖","🐻","🐱","🐶","🐼","🐸","🐵","🐰","🦊","🐹","🐯"];
+const colors = ["אדום","כחול","ירוק","צהוב","סגול","כתום"];
+
+function randomItem(arr){
+    return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function generateDoll(){
+
+    return {
+        face: randomItem(faces),
+        color: randomItem(colors),
+        hat: Math.random() < 0.5,
+        glasses: Math.random() < 0.5
+    };
+}
+
+function getHint(target,index,total){
+
+    if(stage <= 3){
+
+        let hints = [
+            `הבובה בצבע ${target.color}`,
+            target.hat ? "לבובה יש כובע" : "לבובה אין כובע",
+            target.glasses ? "לבובה יש משקפיים" : "לבובה אין משקפיים"
+        ];
+
+        return randomItem(hints);
+    }
+
+    if(stage <= 6){
+
+        let hints = [
+            `לבובה יש צבע ${target.color}`,
+            target.hat
+            ? "לבובה יש כובע ואין צורך לחפש בובות בלי כובע"
+            : "לבובה אין כובע",
+            target.glasses
+            ? "לבובה יש משקפיים"
+            : "לבובה אין משקפיים"
+        ];
+
+        return randomItem(hints);
+    }
+
+    if(stage <= 8){
+
+        if(index === 0){
+            return "הבובה נמצאת בקצה.";
+        }
+
+        if(index === total-1){
+            return "הבובה נמצאת בקצה.";
+        }
+
+        return `הבובה בצבע ${target.color} ואינה בקצה.`;
+    }
+
+    return `לבובה צבע ${target.color} והיא ${target.hat ? "עם כובע" : "בלי כובע"} ו-${target.glasses ? "עם משקפיים" : "בלי משקפיים"}.`;
+}
+
+function createStage(){
+
+    if(stage > 10){
+        finishGame();
+        return;
+    }
+
+    let goodDolls = 3 + stage;
+    let badDolls = 1 + Math.floor(stage/2);
+
+    let totalDolls = goodDolls + badDolls;
+
+    let dolls = [];
+
+    for(let i=0;i<totalDolls;i++){
+        dolls.push(generateDoll());
+    }
+
+    let correctIndex =
+        Math.floor(Math.random()*totalDolls);
+
+    let target = dolls[correctIndex];
+
+    document.getElementById("hint").innerHTML =
+        "🕵️ רמז: " +
+        getHint(target,correctIndex,totalDolls);
+
+    document.getElementById("info").innerHTML =
+        `שלב ${stage}/10 | הצלחות: ${score}`;
+
+    let dollsDiv = document.getElementById("dolls");
+    dollsDiv.innerHTML = "";
+
+    dolls.forEach((doll,index)=>{
+
+        let div = document.createElement("div");
+        div.className = "doll";
+
+        div.innerHTML = `
+            <div class="face">${doll.face}</div>
+            <div class="details">
+                צבע: ${doll.color}<br>
+                ${doll.hat ? "🎩 כובע" : ""}
+                ${doll.glasses ? "👓 משקפיים" : ""}
+            </div>
+        `;
+
+        div.onclick = ()=>{
+
+            if(index === correctIndex){
+
+                score++;
+                alert("🎉 מצאת את האיש!");
+
+            }else{
+
+                alert("❌ האיש לא היה בבובה הזאת.");
+            }
+
+            stage++;
+            createStage();
+        };
+
+        dollsDiv.appendChild(div);
+    });
+}
+
+function finishGame(){
+
+    document.getElementById("dolls").innerHTML = "";
+
+    if(score <= 3){
+
+        document.getElementById("hint").innerHTML =
+            `💀 נפסלת! מצאת רק ${score} בובות מתוך 10.`;
+
+        document.getElementById("info").innerHTML = "";
+        return;
+    }
+
+    if(score < 10){
+
+        document.getElementById("hint").innerHTML =
+            `⚠️ סיימת עם ${score}/10.<br><br>
+            לפי החוקים נוספו 5 בובות רעות ו-6 בובות טובות!`;
+
+    }else{
+
+        document.getElementById("hint").innerHTML =
+            "🏆 ניצחון מושלם! מצאת את האיש בכל השלבים!";
+    }
+
+    document.getElementById("info").innerHTML =
+        `תוצאה סופית: ${score}/10`;
+}
+
+createStage();
+
+</script>
+
+</body>
+</html>

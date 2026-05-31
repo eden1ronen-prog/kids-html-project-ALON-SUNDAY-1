@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>גודג'ו - קרב תלת מימד</title>
+<style>
+body{
+  margin:0;
+  background:#050816;
+  color:white;
+  font-family:Arial;
+  text-align:center;
+}
+canvas{
+  background:linear-gradient(#101735,#050816);
+  border:4px solid cyan;
+  margin-top:10px;
+}
+button{
+  font-size:18px;
+  padding:10px;
+  margin:5px;
+  cursor:pointer;
+  border-radius:10px;
+}
+</style>
+</head>
+<body>
+
+<h1>🌌 גודג'ו - קרב המימד האינסופי 🌌</h1>
+<div id="stats"></div>
+
+<canvas id="game" width="1000" height="550"></canvas>
+
+<br>
+<button onclick="attack(25)">👊 אגרוף</button>
+<button onclick="attack(50)">🔵 מתקפת כחול</button>
+<button onclick="attack(100)">🟣 מתקפת סגול</button>
+<button onclick="dimensionAttack()">🌌 מימד אינסופי</button>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const stats = document.getElementById("stats");
+
+let level = 1;
+let gojoMaxHP = 200;
+let gojoHP = 200;
+
+let enemyMaxHP = 50;
+let enemyHP = 50;
+
+let isBoss = false;
+let enemyFrozen = false;
+let effect = "";
+
+const gojoImg = new Image();
+gojoImg.src = "gojo.png";
+
+function setupLevel(){
+  isBoss = level % 10 === 0;
+
+  enemyMaxHP = 50 + (level - 1) * 10;
+
+  if(isBoss){
+    enemyMaxHP *= 3;
+  }
+
+  enemyHP = enemyMaxHP;
+
+  if(level > 1 && level % 5 === 0){
+    gojoMaxHP += 50;
+    gojoHP = gojoMaxHP;
+  }
+
+  draw();
+}
+
+function attack(damage){
+  enemyHP -= damage;
+  effect = "attack";
+
+  if(enemyHP <= 0){
+    nextLevel();
+    return;
+  }
+
+  enemyTurn();
+  draw();
+}
+
+function dimensionAttack(){
+  enemyFrozen = true;
+  enemyHP -= 70;
+  effect = "dimension";
+
+  setTimeout(()=>{
+    enemyFrozen = false;
+    effect = "";
+    draw();
+  }, 5000);
+
+  if(enemyHP <= 0){
+    nextLevel();
+    return;
+  }
+
+  draw();
+}
+
+function enemyTurn(){
+  if(enemyFrozen) return;
+
+  let damage = 10 + level * 2;
+
+  if(isBoss){
+    damage *= 2;
+  }
+
+  gojoHP -= damage;
+
+  if(gojoHP <= 0){
+    alert("💀 הפסדת! גודג'ו נפל בקרב.");
+    level = 1;
+    gojoMaxHP = 200;
+    gojoHP = 200;
+    setupLevel();
+  }
+}
+
+function nextLevel(){
+  level++;
+
+  if(level > 50){
+    alert("🏆 ניצחת את כל 50 השלבים!");
+    level = 1;
+    gojoMaxHP = 200;
+    gojoHP = 200;
+  }
+
+  setupLevel();
+}
+
+function healthBar(x,y,w,h,current,max,color){
+  ctx.fillStyle = "#333";
+  ctx.fillRect(x,y,w,h);
+
+  ctx.fillStyle = color;
+  ctx.fillRect(x,y,(current / max) * w,h);
+
+  ctx.strokeStyle = "white";
+  ctx.strokeRect(x,y,w,h);
+}
+
+function draw3DArena(){
+  // רצפה תלת מימדית מדומה
+  ctx.fillStyle = "#111827";
+  ctx.beginPath();
+  ctx.moveTo(150, 500);
+  ctx.lineTo(850, 500);
+  ctx.lineTo(650, 230);
+  ctx.lineTo(350, 230);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = "#00ffff55";
+  ctx.lineWidth = 2;
+
+  for(let i = 0; i < 8; i++){
+    let y = 500 - i * 35;
+    ctx.beginPath();
+    ctx.moveTo(150 + i * 25, y);
+    ctx.lineTo(850 - i * 25, y);
+    ctx.stroke();
+  }
+
+  for(let i = 0; i < 8; i++){
+    ctx.beginPath();
+    ctx.moveTo(150 + i * 100, 500);
+    ctx.lineTo(500, 230);
+    ctx.stroke();
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  stats.innerHTML =
+  `שלב: ${level} / 50 |
+  חיים גודג'ו: ${gojoHP}/${gojoMaxHP} |
+  חיים אויב: ${enemyHP}/${enemyMaxHP}
+  ${isBoss ? " | 👑 בוס זומבי נינג׳ה" : ""}`;
+
+  draw3DArena();
+
+  // אפקט מימד
+  if(effect === "dimension"){
+    ctx.fillStyle = "rgba(120,0,255,0.25)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.strokeStyle = "violet";
+    ctx.lineWidth = 8;
+    ctx.strokeRect(610,120,260,330);
+
+    ctx.fillStyle = "violet";
+    ctx.font = "34px Arial";
+    ctx.fillText("🌌 מימד אינסופי!", 370, 90);
+  }
+
+  // גודג'ו
+  ctx.drawImage(gojoImg, 120, 210, 230, 280);
+  healthBar(110, 175, 250, 20, gojoHP, gojoMaxHP, "cyan");
+
+  ctx.fillStyle = "white";
+  ctx.font = "24px Arial";
+  ctx.fillText("גודג'ו", 190, 160);
+
+  // יריב זומבי נינג'ה באימוג'י
+  ctx.font = isBoss ? "120px Arial" : "90px Arial";
+  ctx.fillText(isBoss ? "🧟‍♂️🥷👑" : "🧟‍♂️🥷", 650, isBoss ? 365 : 350);
+
+  healthBar(620, 175, 260, 20, enemyHP, enemyMaxHP, "red");
+
+  ctx.fillStyle = "white";
+  ctx.font = "24px Arial";
+  ctx.fillText(isBoss ? "בוס זומבי נינג׳ה" : "זומבי נינג׳ה", 670, 160);
+
+  if(enemyFrozen){
+    ctx.strokeStyle = "purple";
+    ctx.lineWidth = 6;
+    ctx.strokeRect(620,150,260,300);
+
+    ctx.fillStyle = "violet";
+    ctx.font = "26px Arial";
+    ctx.fillText("האויב לכוד!", 680, 470);
+  }
+
+  if(effect === "attack"){
+    ctx.fillStyle = "purple";
+    ctx.font = "60px Arial";
+    ctx.fillText("💥", 520, 300);
+  }
+}
+
+gojoImg.onload = setupLevel;
+</script>
+
+</body>
+</html>
